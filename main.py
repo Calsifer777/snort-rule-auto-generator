@@ -21,7 +21,10 @@ if __name__ == '__main__':
     	sys.exit()
     else:
         if '-h' in sys.argv:
-            print('''Usage: <option> <input_file> <cluster_col> <centroid_dis_col> <payload_col> <output_file>''')
+            print('''Usage: <option> <input_file> <cluster_col> <centroid_dis_col> <payload_col> <output_file>
+option:
+    -p: packet mode generator (payload is a list in df)
+    -s: session mode generator (payload is a double list in df )''')
         else:
             option, input_file, cluster_col, centroid_dis_col, payload_col, output_file = sys.argv[1:]
             start = time.time() # execution time
