@@ -16,6 +16,7 @@ from pathlib import Path
 import glob
 
 if __name__ == '__main__':
+    option = sys.argv[1]
     start = time.time() # execution time
     day = '20210501'
     data = pd.read_pickle(f"./testcase/{day}_for_sig_packet_table.pkl")
@@ -26,7 +27,20 @@ if __name__ == '__main__':
     threshold_dict = {}
     for c in cluster_set:
         fliter = (data["cluster_id"] == c)
-        testcase[c] = list(data[fliter]["raw_payload"].unique())
+        ### centroid threshold ###
+        threshold_max = data[fliter]["centroid_dis"].max()
+        threshold_min = data[fliter]["centroid_dis"].min()
+        threshold = threshold_max - (threshold_max - threshold_min)*0.3 #去掉 3 成邊緣資料
+        filter_df = data[fliter][['centroid_dis', 'tcp_i_payload_list']]    # 每個 cluster 的 dist, preprocessed_payload 的 df
+        filter_df = filter_df[filter_df.centroid_dis <= threshold].reset_index()     # 只留離中心 80% 的數據，reset_index 方便 for loop 遍歷
+        ### centroid threshold ###
+        if option == '-p':
+            testcase[int(c)] = list(filter_df['tcp_i_payload_list'].apply(lambda x: str(bytes(x, 'utf-8'))[2:-1]).unique())
+        elif option == '-s':
+            payload_list = []
+            for i in filter_df['tcp_i_payload_list']:
+                payload_list += i
+            testcase[int(c)] = list(set(payload_list))
     testcase # dict with same cluster's payloads ({0:[payload1,payload2...]...})
     
     if -1 in testcase.keys(): # Cluster by DBSCAN contains -1, rename to cluster_max
